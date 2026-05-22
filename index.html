@@ -44,7 +44,7 @@
         .hint-text {
             color: #bdc3c7;
             font-size: 0.9em;
-            display: none; /* 초기에는 숨김 */
+            display: none;
         }
         .main-text {
             font-size: 1.1em;
@@ -99,22 +99,7 @@
 </div>
 
 <script>
-    // 1. 문제 데이터 세팅 (DB 역할)
-    const songs = [
-        {
-            title: "BANGBANG",
-            hint1: "She got a body like an hourglass\nBut I can give it to you all the time",
-            mainLyrics: "Bang bang into the room (I know you want it)\nBang bang all over you (I'll let you have it)",
-            hint2: "Wait a minute lemme take you there (ah)\nWait a minute tell 'em"
-        },
-        {
-            title: "Ditto",
-            hint1: "아침은 너무 멀어\nSo say it ditto",
-            mainLyrics: "훌쩍 커버렸어\n함께한 기억처럼",
-            hint2: "널 보는 내 마음은\n어느새 여름 지나 가을"
-        }
-    ];
-
+    let songs = []; 
     let currentSongIndex = 0;
     let timeLeft = 30;
     let currentScore = 10;
@@ -133,7 +118,6 @@
 
     // 게임 시작 함수
     function loadGame(index) {
-        // 초기화
         clearInterval(timerInterval);
         timeLeft = 30;
         currentScore = 10;
@@ -146,7 +130,6 @@
         hint1El.style.display = 'none';
         hint2El.style.display = 'none';
 
-        // 가사 출력 (줄바꿈 처리)
         const song = songs[index];
         mainLyricsEl.innerHTML = song.mainLyrics.replace(/\n/g, '<br>');
         hint1El.innerHTML = song.hint1.replace(/\n/g, '<br>');
@@ -161,22 +144,17 @@
         timerInterval = setInterval(() => {
             timeLeft--;
             
-            // 20초 남았을 때 첫 번째 힌트 (앞부분 가사)
             if (timeLeft === 20) {
                 hint1El.style.display = 'block';
-                currentScore = 8; // 2점 감점
+                currentScore = 8;
             }
-            
-            // 10초 남았을 때 두 번째 힌트 (뒷부분 가사)
             if (timeLeft === 10) {
                 hint2El.style.display = 'block';
-                currentScore = 6; // 추가 2점 감점
+                currentScore = 6;
             }
-
             if (timeLeft <= 0) {
                 endGame(false, "시간 초과!");
             }
-
             updateStatus();
         }, 1000);
     }
@@ -191,7 +169,6 @@
         const userAnswer = inputEl.value;
         const correctAnswer = songs[currentSongIndex].title;
 
-        // 완전 동일한지 엄격하게 검사 (=== 사용)
         if (userAnswer === correctAnswer) {
             endGame(true, `정답! ${currentScore}점을 획득했습니다.`);
         } else {
@@ -200,40 +177,52 @@
         }
     });
 
-    // 엔터키 제출 지원
     inputEl.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') submitBtn.click();
     });
 
-    // 게임 종료 처리 (무한 반복을 위해 구조 변경)
-function endGame(isWin, msg) {
-    clearInterval(timerInterval);
-    inputEl.disabled = true;
-    submitBtn.disabled = true;
-    
-    resultMsg.style.color = isWin ? 'green' : 'red';
-    resultMsg.innerText = msg;
-    
-    // 숨겨진 힌트 모두 공개
-    hint1El.style.display = 'block';
-    hint2El.style.display = 'block';
+    // 게임 종료 처리
+    function endGame(isWin, msg) {
+        clearInterval(timerInterval);
+        inputEl.disabled = true;
+        submitBtn.disabled = true;
+        
+        resultMsg.style.color = isWin ? 'green' : 'red';
+        resultMsg.innerText = msg;
+        
+        hint1El.style.display = 'block';
+        hint2El.style.display = 'block';
 
-    // 노래가 끝나도 무조건 '다음 문제' 버튼을 표시
-    nextBtn.style.display = 'block';
-    nextBtn.innerText = "다음 문제 (랜덤)";
-}
+        // 무조건 랜덤 다음 문제 버튼 표시
+        nextBtn.style.display = 'block';
+        nextBtn.innerText = "다음 문제 (랜덤)";
+    }
 
-// 다음 문제로 넘어가기 (랜덤 로직 적용)
-nextBtn.addEventListener('click', () => {
-    // 0부터 (전체 노래 개수 - 1) 사이의 무작위 번호 뽑기
-    const randomIndex = Math.floor(Math.random() * songs.length);
-    currentSongIndex = randomIndex;
-    
-    loadGame(currentSongIndex);
-});
+    // 다음 문제 로직 (랜덤 인덱스 추출)
+    nextBtn.addEventListener('click', () => {
+        const randomIndex = Math.floor(Math.random() * songs.length);
+        currentSongIndex = randomIndex;
+        loadGame(currentSongIndex);
+    });
 
-    // 첫 게임 실행
-    loadGame(currentSongIndex);
+    // 🌟 기존에 혹시 바깥에 loadGame(currentSongIndex); 가 있다면 꼭 지워주세요!
+
+    fetch('songs.json')
+        .then(response => response.json())
+        .then(data => {
+            songs = data; 
+            
+            // 첫 번째 문제도 전체 노래 개수 안에서 무작위로 뽑기
+            const firstRandomIndex = Math.floor(Math.random() * songs.length);
+            currentSongIndex = firstRandomIndex;
+            
+            // 뽑은 랜덤 번호로 첫 게임 시작
+            loadGame(currentSongIndex);
+        })
+        .catch(error => {
+            console.error('데이터 로드 실패:', error);
+            alert("songs.json 파일을 불러오지 못했습니다.");
+        });
 </script>
 </body>
 </html>
