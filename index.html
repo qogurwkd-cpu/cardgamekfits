@@ -81,7 +81,7 @@
 <div class="game-board">
     <h2>🎵 노래 제목 맞추기</h2>
     <div class="status-bar">
-        <span id="timer">남은 시간: 30초</span>
+        <span id="song-count">총 0곡</span> <span id="timer">남은 시간: 30초</span>
         <span id="score-display">예상 점수: 10점</span>
     </div>
 
@@ -207,16 +207,21 @@
 
     // 🌟 기존에 혹시 바깥에 loadGame(currentSongIndex); 가 있다면 꼭 지워주세요!
 
+    // (기존 코드들...)
+        const songCountEl = document.getElementById('song-count'); // 👈 HTML에서 요소 가져오기 추가
+
+    // 🌟 JSON 데이터 불러오기 부분 수정
     fetch('songs.json')
         .then(response => response.json())
         .then(data => {
             songs = data; 
             
-            // 첫 번째 문제도 전체 노래 개수 안에서 무작위로 뽑기
+            // 👈 이 부분이 추가되었습니다! (데이터 개수를 화면에 표시)
+            songCountEl.innerText = `현재 등록된 곡: ${songs.length}곡`; 
+            
+            // 첫 번째 문제도 랜덤
             const firstRandomIndex = Math.floor(Math.random() * songs.length);
             currentSongIndex = firstRandomIndex;
-            
-            // 뽑은 랜덤 번호로 첫 게임 시작
             loadGame(currentSongIndex);
         })
         .catch(error => {
